@@ -108,7 +108,7 @@ class Patient:
         minSize = int(len(os.listdir(laDirectory))*0.33)
         maxSize = int(len(os.listdir(laDirectory))*0.66)
         for dicoms in os.listdir(laDirectory)[minSize:maxSize]:
-            if dicoms.endswith('.dcm'):
+            if dicoms.endswith('.dcm') and len(self.getLaImages()) < 20:
                 self.laImages.append(self.dicomToNumpy(dicoms))
                 
                 
@@ -119,7 +119,7 @@ class Patient:
         minSize = int(len(os.listdir(saDirectory))*0.33)
         maxSize = int(len(os.listdir(saDirectory))*0.66)
         for dicoms in os.listdir(saDirectory)[minSize:maxSize]:
-            if dicoms.endswith('.dcm'):
+            if dicoms.endswith('.dcm') and len(self.getSaImages()) < 20:
                 self.saImages.append(self.dicomToNumpy(dicoms))
     
     

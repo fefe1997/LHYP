@@ -1,14 +1,14 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# In[31]:
+# In[8]:
 
 
 # Install pydicom library
 get_ipython().system('pip install -U pydicom')
 
 
-# In[37]:
+# In[9]:
 
 
 # Import libraries that I use 
@@ -18,7 +18,7 @@ import pickle
 import numpy as np
 
 
-# In[38]:
+# In[10]:
 
 
 # Root directory is where the patients' file are stored

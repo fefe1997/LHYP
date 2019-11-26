@@ -1,14 +1,14 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# In[2]:
+# In[5]:
 
 
 # Install pydicom library
 get_ipython().system('pip install -U pydicom')
 
 
-# In[3]:
+# In[6]:
 
 
 # Import libraries that I use 
@@ -19,7 +19,7 @@ import numpy as np
 import re
 
 
-# In[3]:
+# In[7]:
 
 
 # Patient object implementation
@@ -105,16 +105,24 @@ class Patient:
     # Reads the dicom files from la directory
     def addNumpyLaImages(self, laDirectory):
         os.chdir(laDirectory)
-        for dicoms in os.listdir(laDirectory):
-            if(dicoms.endswith('.dcm') and len(self.laImages) < 10):
+        minSize = int(len(os.listdir(laDirectory))*0.33)
+        maxSize = int(len(os.listdir(laDirectory))*0.66)
+        for dicoms in os.listdir(laDirectory)[minSize:maxSize]:
+            if dicoms.endswith('.dcm'):
                 self.laImages.append(self.dicomToNumpy(dicoms))
+                
+                
     
     # Reads the dicom files from sa directory
     def addNumpySaImages(self, saDirectory):
         os.chdir(saDirectory)
-        for dicoms in os.listdir(saDirectory):
-            if(dicoms.endswith('.dcm') and len(self.saImages) < 10):
+        minSize = int(len(os.listdir(saDirectory))*0.33)
+        maxSize = int(len(os.listdir(saDirectory))*0.66)
+        for dicoms in os.listdir(saDirectory)[minSize:maxSize]:
+            if dicoms.endswith('.dcm'):
                 self.saImages.append(self.dicomToNumpy(dicoms))
+    
+    
     
     # Set the gender attribute with the help of the .con file
     def setGender(self, conFile):

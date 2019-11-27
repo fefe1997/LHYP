@@ -1,15 +1,11 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# In[5]:
+# In[2]:
 
 
 # Install pydicom library
 get_ipython().system('pip install -U pydicom')
-
-
-# In[6]:
-
 
 # Import libraries that I use 
 import os
@@ -17,9 +13,63 @@ import pydicom as dicom
 import pickle
 import numpy as np
 import re
+import logging
 
 
-# In[7]:
+# In[ ]:
+
+
+# Global functions that help reading images
+
+# Get all slice locations from an image directory
+def getSliceLocations(directory):
+        os.chdir(directory)
+        sliceLocations = []
+        for dicomFile in os.listdir(directory):
+            if dicomFile.endswith('.dcm'):
+                try:
+                    ds = dicom.dcmread(dicomFile)
+                    sliceLocations.append(ds.SliceLocation)
+                except:
+                    logging.error('Something went wrong during reading the slice locations in ' 
+                                  + directory + ' directory with this dicom file: ' + dicomFile)
+        sliceLocations = set(sliceLocations)
+        sliceLocations = list(sliceLocations)
+        sliceLocations.sort()
+        return sliceLocations
+
+
+# Get the middle part of the slice locations
+def reduceSliceLocations(sliceLocation):
+    validSliceLocations = sliceLocation
+    if len(validSliceLocations) < 3:
+        logging.info('The slicelocation is less than 3')
+        return validSliceLocations
+    while len(validSliceLocations) > int(len(sliceLocation)/3):
+        validSliceLocations = validSliceLocations[1:-1]
+    return validSliceLocations
+
+
+# Get the dicom images from the middle of the MRI slices
+def addDicomImagesToArray(dicomDirectory):
+    dicomImages = []
+    sliceLocations = getSliceLocations(dicomDirectory)
+    validSliceLocations = reduceSliceLocations(sliceLocations)
+    os.chdir(dicomDirectory)
+    for dicomFile in os.listdir(dicomDirectory):
+        if dicomFile.endswith('.dcm') and len(dicomImages) < 10:
+            try:
+                ds = dicom.dcmread(dicomFile)
+                if ds.SliceLocation in validSliceLocations:
+                    logging.info('Appended an image to dicomImage: ' + dicomFile +' in ' + dicomDirectory)
+                    dicomImages.append(np.array(ds.pixel_array))
+            except:
+                logging.error('Something went wrong in addDicomImagesToArray() in ' + dicomDirectory +
+                              'during reading ' + dicomFile)
+    return dicomImages
+
+
+# In[1]:
 
 
 # Patient object implementation
@@ -40,14 +90,14 @@ class Patient:
             # Load the la images
             if files == "la":
                 laDirectory = patientDirectory + "/la"
-                self.addNumpyLaImages(laDirectory)
+                self.laImages = addDicomImagesToArray(laDirectory)
             
             # Load sa images
             if files == "sa":
                 saDirectory = patientDirectory + "/sa"
                 self.setGender(saDirectory + "/contours.con")
                 self.setWeight(saDirectory + "/contours.con")
-                self.addNumpySaImages(saDirectory + "/images")
+                self.saImages = addDicomImagesToArray(saDirectory + "/images")
             
             # Checks the disease
             if files == "meta.txt":
@@ -82,7 +132,7 @@ class Patient:
     
     def getSaImages(self):
         return self.saImages
-    
+         
     
     # Checks the txt file and set the patient disease
     def hasDisease(self, txtFile):
@@ -94,34 +144,7 @@ class Patient:
         elif "NORM" in line: 
             self.Normal=True
         else: 
-            self.hasOther=True
-
-    # Convert dicom file to numpy array
-    def dicomToNumpy(self, dicomFile):
-        ds = dicom.read_file(dicomFile)
-        return np.array(ds.pixel_array)
-    
-    
-    # Reads the dicom files from la directory
-    def addNumpyLaImages(self, laDirectory):
-        os.chdir(laDirectory)
-        minSize = int(len(os.listdir(laDirectory))*0.33)
-        maxSize = int(len(os.listdir(laDirectory))*0.66)
-        for dicoms in os.listdir(laDirectory)[minSize:maxSize]:
-            if dicoms.endswith('.dcm') and len(self.getLaImages()) < 20:
-                self.laImages.append(self.dicomToNumpy(dicoms))
-                
-                
-    
-    # Reads the dicom files from sa directory
-    def addNumpySaImages(self, saDirectory):
-        os.chdir(saDirectory)
-        minSize = int(len(os.listdir(saDirectory))*0.33)
-        maxSize = int(len(os.listdir(saDirectory))*0.66)
-        for dicoms in os.listdir(saDirectory)[minSize:maxSize]:
-            if dicoms.endswith('.dcm') and len(self.getSaImages()) < 20:
-                self.saImages.append(self.dicomToNumpy(dicoms))
-    
+            self.hasOther=True    
     
     
     # Set the gender attribute with the help of the .con file

@@ -1,13 +1,6 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# In[1]:
-
-
-# Install pydicom library
-get_ipython().system('pip install -U pydicom')
-
-
 # In[2]:
 
 
@@ -15,7 +8,6 @@ get_ipython().system('pip install -U pydicom')
 from Patient import Patient
 import os
 import pickle
-import numpy as np
 
 
 # In[3]:
